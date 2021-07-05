@@ -20,12 +20,12 @@ const (
 )
 
 // New returns a random color in the specified hue and luminosity.
-func New(hue Color, lum Luminosity) color.Color {
+func New(r *rand.Rand, hue Color, lum Luminosity) color.Color {
 
 	c := HSV{}
-	c.H = setHue(hue)
-	c.S = setSaturation(c, hue, lum)
-	c.V = setBrightness(c, lum)
+	c.H = setHue(r, hue)
+	c.S = setSaturation(r, c, hue, lum)
+	c.V = setBrightness(r, c, lum)
 
 	if c.H == 0 {
 		c.H = 1
@@ -67,8 +67,8 @@ func (c Color) BrightnessRange() Range {
 	return Range{bMin, bMax}
 }
 
-func setHue(c Color) float64 {
-	hue := randWithin(c.HueRange[0], c.HueRange[1])
+func setHue(r *rand.Rand, c Color) float64 {
+	hue := randWithin(r, c.HueRange[0], c.HueRange[1])
 
 	if hue < 0 {
 		hue = 360 + hue
@@ -76,7 +76,7 @@ func setHue(c Color) float64 {
 	return float64(hue)
 }
 
-func setSaturation(hsv HSV, hue Color, lum Luminosity) float64 {
+func setSaturation(r *rand.Rand, hsv HSV, hue Color, lum Luminosity) float64 {
 	if hue.HueRange == Monochrome.HueRange {
 		return 0
 	}
@@ -94,13 +94,13 @@ func setSaturation(hsv HSV, hue Color, lum Luminosity) float64 {
 	case LIGHT:
 		sMax = 55
 	case RANDOM:
-		return float64(randWithin(0, 100))
+		return float64(randWithin(r, 0, 100))
 	}
 
-	return float64(randWithin(sMin, sMax))
+	return float64(randWithin(r, sMin, sMax))
 }
 
-func setBrightness(hsv HSV, lum Luminosity) float64 {
+func setBrightness(r *rand.Rand, hsv HSV, lum Luminosity) float64 {
 	bMin := getMinimumBrightness(hsv)
 	bMax := 100
 
@@ -115,7 +115,7 @@ func setBrightness(hsv HSV, lum Luminosity) float64 {
 		bMin = 0
 		bMax = 100
 	}
-	return float64(randWithin(bMin, bMax))
+	return float64(randWithin(r, bMin, bMax))
 }
 
 func getMinimumBrightness(hsv HSV) int {
@@ -137,6 +137,6 @@ func getMinimumBrightness(hsv HSV) int {
 	return 0
 }
 
-func randWithin(first, last int) int {
-	return first + rand.Intn(last+1-first)
+func randWithin(r *rand.Rand, first, last int) int {
+	return first + r.Intn(last+1-first)
 }
